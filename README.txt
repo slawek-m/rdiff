@@ -1,0 +1,6 @@
+Usage:
+
+rdiff signature input_file_name output_signature_file_name
+rdiff delta input_changed_file_name input_signature_file_name output_delta_file_name
+rdiff patch input_file_name input_delta_file_name output_patched_file_name
+
