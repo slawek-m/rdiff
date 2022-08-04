@@ -29,6 +29,7 @@ private:
 
   size_t ReadBlockFromOryginal(std::vector<char> &data_buffer,
                                uint32_t block_number);
+  bool CopyOryginal();
   void WriteDataToRecovered(const std::vector<char> &data_buffer,
                             size_t data_size);
 };

@@ -29,6 +29,25 @@ size_t Patch::ReadBlockFromOryginal(std::vector<char> &data_buffer,
   return size;
 }
 
+bool Patch::CopyOryginal() {
+  char val;
+  std::ifstream fin(m_in_delta_file_name, std::ifstream::binary);
+
+  fin.read(&val, 1);
+  if (!fin.gcount()) {
+    std::ifstream fin_oryginal(m_in_oryginal_file_name, std::ifstream::binary);
+
+    while (!fin_oryginal.eof()) {
+      fin_oryginal.read(&val, 1);
+      if (fin_oryginal.gcount()) {
+        m_fout_recovered.write(&val, 1);
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
 void Patch::WriteDataToRecovered(const std::vector<char> &data_buffer,
                                  size_t data_size) {
   m_fout_recovered.write(data_buffer.data(), data_size);
@@ -37,6 +56,10 @@ void Patch::WriteDataToRecovered(const std::vector<char> &data_buffer,
 void Patch::MakePatch() {
   char delimiter;
   std::vector<char> data_buffer(m_block_size);
+
+  if (CopyOryginal()) {
+    return;
+  }
 
   while (!m_fin.eof()) {
     m_fin.read(&delimiter, 1);

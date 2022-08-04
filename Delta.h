@@ -36,6 +36,7 @@ private:
   void WriteFile(std::ofstream &fout, uint32_t block_num);
   void WriteTail(std::ofstream &fout);
   void WriteData(char data);
+  bool IsIdentical();
 };
 
 #endif

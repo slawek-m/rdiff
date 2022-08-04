@@ -16,6 +16,12 @@ Delta::Delta(Weaksum &weak, Strongsum &strong, const std::string &in_file_name,
 }
 
 void Delta::CreateDelta() {
+
+  if (IsIdentical()) {
+    std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+    return;
+  }
+
   std::ifstream fin(m_in_file_name, std::ifstream::binary);
   std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
 
@@ -178,6 +184,40 @@ void Delta::WriteTail(std::ofstream &fout) {
     fout.write(m_file_data_buffer.data(), out_data_size);
     m_file_data_buffer.clear();
   }
+}
+
+bool Delta::IsIdentical() {
+  std::ifstream fin(m_in_file_name, std::ifstream::binary);
+  std::ifstream fsig(m_in_sig_file_name, std::ifstream::binary);
+
+  std::vector<char> input_buffer(m_block_size);
+  const size_t signature_size = m_ws.GetSize() + m_ss.GetSize();
+  std::vector<char> computed_signature_buffer(signature_size);
+  std::vector<char> read_signature_buffer(signature_size);
+
+  while (!fin.eof() && !fsig.eof()) {
+    fin.read(input_buffer.data(), input_buffer.size());
+    size_t actual_block_size = fin.gcount();
+
+    fsig.read(read_signature_buffer.data(), read_signature_buffer.size());
+    size_t actual_signature_size = fsig.gcount();
+
+    if (((actual_block_size > 0) && (actual_signature_size == 0)) ||
+        ((actual_block_size == 0) && (actual_signature_size > 0))) {
+      return false;
+    } else if ((actual_block_size > 0) &&
+               (actual_signature_size == signature_size)) {
+      BlockSignature bs(m_ws, m_ss, actual_block_size);
+      bs.Sign(
+          reinterpret_cast<unsigned char *>(computed_signature_buffer.data()),
+          input_buffer.data());
+      if (memcmp(computed_signature_buffer.data(), read_signature_buffer.data(),
+                 signature_size) != 0) {
+        return false;
+      }
+    }
+  }
+  return true;
 }
 
 void Delta::ParseDelta() {
