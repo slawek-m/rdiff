@@ -54,12 +54,12 @@ void Patch::WriteDataToRecovered(const std::vector<char> &data_buffer,
 }
 
 void Patch::MakePatch() {
-  char delimiter;
-  std::vector<char> data_buffer(m_block_size);
-
   if (CopyOryginal()) {
     return;
   }
+
+  char delimiter;
+  std::vector<char> data_buffer(m_block_size);
 
   while (!m_fin.eof()) {
     m_fin.read(&delimiter, 1);
