@@ -32,11 +32,15 @@ private:
   const char m_data_delimiter{'d'};
   const int m_data_num_field_size{4};
 
+  const char m_empty_delimiter{'e'};
+
   bool Match(uint32_t weak_sig, uint32_t &block_num);
   void WriteFile(std::ofstream &fout, uint32_t block_num);
   void WriteTail(std::ofstream &fout);
   void WriteData(char data);
   bool IsIdentical();
+  bool IsEmpty();
+  void CreateEmpty();
 };
 
 #endif

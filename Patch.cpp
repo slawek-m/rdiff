@@ -83,6 +83,8 @@ void Patch::MakePatch() {
         }
         m_fin.read(data_buffer.data(), buff_tail_size);
         WriteDataToRecovered(data_buffer, buff_tail_size);
+      } else if (delimiter == m_empty_delimiter) {
+        return;
       }
     }
   }

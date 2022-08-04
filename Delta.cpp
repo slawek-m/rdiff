@@ -22,6 +22,11 @@ void Delta::CreateDelta() {
     return;
   }
 
+  if (IsEmpty()) {
+    CreateEmpty();
+    return;
+  }
+
   std::ifstream fin(m_in_file_name, std::ifstream::binary);
   std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
 
@@ -218,6 +223,22 @@ bool Delta::IsIdentical() {
     }
   }
   return true;
+}
+
+bool Delta::IsEmpty() {
+  std::ifstream fin(m_in_file_name, std::ifstream::binary);
+  if (!fin.eof()) {
+    char val;
+    if (!fin.read(&val, 1)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void Delta::CreateEmpty() {
+  std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+  fout.write(&m_empty_delimiter, 1);
 }
 
 void Delta::ParseDelta() {

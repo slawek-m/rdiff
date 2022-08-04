@@ -258,9 +258,10 @@ int main() {
             << "/*****************************signature, delta, patching "
                "tests********************************/"
             << std::endl;
-  const int tests_number = 7;
+  const int tests_begin = 0;
+  const int tests_end = 8;
   std::string dir;
-  for (int i = 0; i <= tests_number; ++i) {
+  for (int i = tests_begin; i <= tests_end; ++i) {
     dir = std::to_string(i) + "/";
 
     size_t block_size = 32;
@@ -290,7 +291,7 @@ int main() {
     }
   }
 
-  for (int i = 0; i <= tests_number; ++i) {
+  for (int i = tests_begin; i <= tests_end; ++i) {
     dir = std::to_string(i) + "/";
     const std::string in_file_changed_name = dir + "input_changed.txt";
     const std::string out_recovered_file_name = dir + "recovered.bin";
