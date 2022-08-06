@@ -22,6 +22,7 @@ private:
   std::ifstream m_fin;
 
   const char m_block_delimiter{'b'};
+  const char m_compressed_delimiter{'c'};
   const int m_block_num_field_size{4};
 
   const char m_data_delimiter{'d'};
@@ -31,6 +32,9 @@ private:
 
   size_t ReadBlockFromOryginal(std::vector<char> &data_buffer,
                                uint32_t block_number);
+  size_t ReadBlocksFromOryginal(std::vector<char> &data_buffer,
+                                uint32_t block_number_first,
+                                uint32_t block_number_last);
   bool CopyOryginal();
   void WriteDataToRecovered(const std::vector<char> &data_buffer,
                             size_t data_size);

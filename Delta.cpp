@@ -1,5 +1,6 @@
 #include "Delta.h"
 #include <fstream>
+#include <iostream>
 
 //#define DEBUG_ENABLE 1
 //#define VERBOSE_ENABLE 1
@@ -162,6 +163,130 @@ bool Delta::Match(uint32_t weak_sig, uint32_t &block_num) {
   return res;
 }
 
+void Delta::CreateCompressedDelta() {
+  if (IsIdentical()) {
+    std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+    return;
+  }
+
+  if (IsEmpty()) {
+    CreateEmpty();
+    return;
+  }
+
+  std::ifstream fin(m_in_file_name, std::ifstream::binary);
+  std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+
+  char buff;
+  char front;
+  uint32_t weak_sig;
+  uint32_t block_num;
+  std::pair<uint32_t, uint32_t> range;
+
+  while (!fin.eof()) {
+    fin.read(&buff, 1);
+    if (fin.gcount()) {
+      m_dq.push_back(buff);
+      auto size = m_dq.size();
+      if (size == 1) {
+        m_ws.Reset();
+        m_ws.Update(reinterpret_cast<const unsigned char *>(&buff), size);
+      } else if ((size > 1) && (size < m_block_size)) {
+        m_ws.Rollin(buff);
+      } else if (size == m_block_size) {
+        m_ws.Rollin(buff);
+        weak_sig = m_ws.Digest();
+
+        if (Match(weak_sig, block_num)) {
+          m_dq.clear();
+
+#ifdef VERBOSE_ENABLE
+          printf("1 block num =====>: %d\n", block_num);
+#endif
+          if (m_csm.AddBlock(block_num, range)) {
+            WriteCompressedFile(fout, range);
+#ifdef VERBOSE_ENABLE
+            printf("1 range: %d, %d:%d\n", range.first != range.second,
+                   range.first, range.second);
+#endif
+          }
+        }
+      } else if (size > m_block_size) {
+        front = m_dq.front();
+        m_dq.pop_front();
+        m_ws.Rotate(front, buff);
+        weak_sig = m_ws.Digest();
+#ifdef VERBOSE_ENABLE
+        printf("2 val =====>: %c, %x\n", front, front);
+#endif
+        if (m_csm.Reset(range)) {
+          WriteCompressedFile(fout, range);
+#ifdef VERBOSE_ENABLE
+          printf("2 range: %d, %d:%d\n", range.first != range.second,
+                 range.first, range.second);
+#endif
+        }
+        WriteData(front);
+
+        if (Match(weak_sig, block_num)) {
+          m_dq.clear();
+#ifdef VERBOSE_ENABLE
+          printf("2 block num =====>: %d\n", block_num);
+#endif
+          if (m_csm.AddBlock(block_num, range)) {
+            WriteCompressedFile(fout, range);
+#ifdef VERBOSE_ENABLE
+            printf("3 range: %d, %d:%d\n", range.first != range.second,
+                   range.first, range.second);
+#endif
+          }
+        }
+      }
+    }
+  }
+
+  while (m_dq.size()) {
+    weak_sig = m_ws.Digest();
+    if (Match(weak_sig, block_num)) {
+      m_dq.clear();
+#ifdef VERBOSE_ENABLE
+      printf("t block num =====>: %d\n", block_num);
+#endif
+      if (m_csm.AddBlock(block_num, range)) {
+        WriteCompressedFile(fout, range);
+#ifdef VERBOSE_ENABLE
+        printf("4 range: %d, %d:%d\n", range.first != range.second, range.first,
+               range.second);
+#endif
+      }
+    } else {
+      front = m_dq.front();
+      m_dq.pop_front();
+      m_ws.Rollout(front);
+
+#ifdef VERBOSE_ENABLE
+      printf("t val =====>: %c, %x\n", front, front);
+#endif
+      if (m_csm.Reset(range)) {
+        WriteCompressedFile(fout, range);
+#ifdef VERBOSE_ENABLE
+        printf("5 range: %d, %d:%d\n", range.first != range.second, range.first,
+               range.second);
+#endif
+      }
+      WriteData(front);
+    }
+  }
+  if (m_csm.Reset(range)) {
+    WriteCompressedFile(fout, range);
+#ifdef VERBOSE_ENABLE
+    printf("6 range: %d, %d:%d\n", range.first != range.second, range.first,
+           range.second);
+#endif
+  }
+  WriteTail(fout);
+}
+
 void Delta::WriteData(char data) { m_file_data_buffer.push_back(data); }
 
 void Delta::WriteFile(std::ofstream &fout, uint32_t block_num) {
@@ -177,6 +302,33 @@ void Delta::WriteFile(std::ofstream &fout, uint32_t block_num) {
 
   fout.write(&m_block_delimiter, 1);
   fout.write(reinterpret_cast<char *>(&block_num), m_block_num_field_size);
+}
+
+void Delta::WriteCompressedFile(std::ofstream &fout,
+                                const std::pair<uint32_t, uint32_t> &range) {
+  const size_t out_data_size = m_file_data_buffer.size();
+  if (out_data_size) {
+    fout.write(&m_data_delimiter, 1);
+
+    fout.write(reinterpret_cast<const char *>(&out_data_size),
+               m_data_num_field_size);
+    fout.write(m_file_data_buffer.data(), out_data_size);
+    m_file_data_buffer.clear();
+  }
+
+  if (range.second > range.first) {
+    fout.write(&m_compressed_delimiter, 1);
+    fout.write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.first)),
+               m_block_num_field_size);
+    fout.write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.second)),
+               m_block_num_field_size);
+  } else if (range.second == range.first) {
+    fout.write(&m_block_delimiter, 1);
+    fout.write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.first)),
+               m_block_num_field_size);
+  } else {
+    std::cerr << "range error" << std::endl;
+  }
 }
 
 void Delta::WriteTail(std::ofstream &fout) {
@@ -239,6 +391,60 @@ bool Delta::IsEmpty() {
 void Delta::CreateEmpty() {
   std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
   fout.write(&m_empty_delimiter, 1);
+}
+
+bool Delta::CompressionSM::AddBlock(uint32_t block_number,
+                                    std::pair<uint32_t, uint32_t> &range) {
+  bool ret = false;
+  if (m_state == 0) {
+    m_first = block_number;
+    m_state = 1;
+  } else if (m_state == 1) {
+    if (block_number - m_first == 1) {
+      m_last = block_number;
+      m_state = 2;
+    } else {
+      ret = true;
+      range.first = m_first;
+      range.second = m_first;
+
+      m_first = block_number;
+      m_state = 1;
+    }
+  } else if (m_state == 2) {
+    if (block_number - m_last == 1) {
+      m_last = block_number;
+      m_state = 2;
+    } else {
+      ret = true;
+      range.first = m_first;
+      range.second = m_last;
+
+      m_first = block_number;
+      m_state = 1;
+    }
+  }
+  return ret;
+}
+
+bool Delta::CompressionSM::Reset(std::pair<uint32_t, uint32_t> &range) {
+  bool ret = false;
+  if (m_state == 0) {
+    m_state = 0;
+  } else if (m_state == 1) {
+    ret = true;
+    range.first = m_first;
+    range.second = m_first;
+
+    m_state = 0;
+  } else if (m_state == 2) {
+    ret = true;
+    range.first = m_first;
+    range.second = m_last;
+
+    m_state = 0;
+  }
+  return ret;
 }
 
 void Delta::ParseDelta() {

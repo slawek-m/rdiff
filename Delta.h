@@ -11,6 +11,7 @@ public:
         const std::string &out_delta_file_name, size_t block_size);
   ~Delta() = default;
   void CreateDelta();
+  void CreateCompressedDelta();
   void ParseDelta();
 
 private:
@@ -27,6 +28,7 @@ private:
 
   std::vector<char> m_file_data_buffer;
   const char m_block_delimiter{'b'};
+  const char m_compressed_delimiter{'c'};
   const int m_block_num_field_size{4};
 
   const char m_data_delimiter{'d'};
@@ -41,6 +43,19 @@ private:
   bool IsIdentical();
   bool IsEmpty();
   void CreateEmpty();
+
+  void WriteCompressedFile(std::ofstream &fout,
+                           const std::pair<uint32_t, uint32_t> &range);
+  class CompressionSM {
+  public:
+    bool AddBlock(uint32_t block_number, std::pair<uint32_t, uint32_t> &range);
+    bool Reset(std::pair<uint32_t, uint32_t> &range);
+
+  private:
+    uint32_t m_first, m_last;
+    uint32_t m_state{0};
+  };
+  CompressionSM m_csm;
 };
 
 #endif

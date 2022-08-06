@@ -29,6 +29,21 @@ size_t Patch::ReadBlockFromOryginal(std::vector<char> &data_buffer,
   return size;
 }
 
+size_t Patch::ReadBlocksFromOryginal(std::vector<char> &blocks_data_buffer,
+                                     uint32_t block_number_first,
+                                     uint32_t block_number_last) {
+  size_t size, total_size = 0;
+  for (uint32_t block_number = block_number_first;
+       block_number <= block_number_last; ++block_number) {
+    std::vector<char> block_buffer(m_block_size);
+    size = ReadBlockFromOryginal(block_buffer, block_number);
+    std::copy(block_buffer.begin(), block_buffer.begin() + size,
+              std::back_inserter(blocks_data_buffer));
+    total_size += size;
+  }
+  return total_size;
+}
+
 bool Patch::CopyOryginal() {
   char val;
   std::ifstream fin(m_in_delta_file_name, std::ifstream::binary);
@@ -83,6 +98,19 @@ void Patch::MakePatch() {
         }
         m_fin.read(data_buffer.data(), buff_tail_size);
         WriteDataToRecovered(data_buffer, buff_tail_size);
+      } else if (delimiter == m_compressed_delimiter) {
+        m_fin.read(data_buffer.data(), m_block_num_field_size);
+        uint32_t block_number_first =
+            *reinterpret_cast<uint32_t *>(data_buffer.data());
+
+        m_fin.read(data_buffer.data(), m_block_num_field_size);
+        uint32_t block_number_last =
+            *reinterpret_cast<uint32_t *>(data_buffer.data());
+
+        std::vector<char> blocks_data_buffer;
+        size_t blocks_data_size = ReadBlocksFromOryginal(
+            blocks_data_buffer, block_number_first, block_number_last);
+        WriteDataToRecovered(blocks_data_buffer, blocks_data_size);
       } else if (delimiter == m_empty_delimiter) {
         return;
       }

@@ -258,48 +258,101 @@ int main() {
             << "/*****************************signature, delta, patching "
                "tests********************************/"
             << std::endl;
-  const int tests_begin = 0;
-  const int tests_end = 8;
-  std::string dir;
-  for (int i = tests_begin; i <= tests_end; ++i) {
-    dir = std::to_string(i) + "/";
+  {
+    const int tests_begin = 0;
+    const int tests_end = 8;
+    std::string dir;
+    for (int i = tests_begin; i <= tests_end; ++i) {
+      dir = std::to_string(i) + "/";
 
-    size_t block_size = 32;
-    Rollsum ws;
-    Mdfour ss;
+      size_t block_size = 32;
+      Rollsum ws;
+      Mdfour ss;
 
-    const std::string in_file_name = dir + "input.txt";
-    const std::string in_sig_file_name = dir + "sig.bin";
-    {
-      Signature s(ws, ss, in_file_name, in_sig_file_name, block_size);
-      s.CreateSignature();
+      const std::string in_file_name = dir + "input.txt";
+      const std::string in_sig_file_name = dir + "sig.bin";
+      {
+        Signature s(ws, ss, in_file_name, in_sig_file_name, block_size);
+        s.CreateSignature();
+      }
+
+      const std::string in_file_changed_name = dir + "input_changed.txt";
+      const std::string out_delta_file_name = dir + "delta.bin";
+      {
+        Delta d(ws, ss, in_file_changed_name, in_sig_file_name,
+                out_delta_file_name, block_size);
+        d.CreateDelta();
+      }
+
+      const std::string out_recovered_file_name = dir + "recovered.bin";
+      {
+        Patch p(in_file_name, out_delta_file_name, out_recovered_file_name,
+                block_size);
+        p.MakePatch();
+      }
     }
 
-    const std::string in_file_changed_name = dir + "input_changed.txt";
-    const std::string out_delta_file_name = dir + "delta.bin";
-    {
-      Delta d(ws, ss, in_file_changed_name, in_sig_file_name,
-              out_delta_file_name, block_size);
-      d.CreateDelta();
-    }
+    for (int i = tests_begin; i <= tests_end; ++i) {
+      dir = std::to_string(i) + "/";
+      const std::string in_file_changed_name = dir + "input_changed.txt";
+      const std::string out_recovered_file_name = dir + "recovered.bin";
 
-    const std::string out_recovered_file_name = dir + "recovered.bin";
-    {
-      Patch p(in_file_name, out_delta_file_name, out_recovered_file_name,
-              block_size);
-      p.MakePatch();
+      std::cout << "test: " << i << " result: "
+                << are_files_identical(in_file_changed_name,
+                                       out_recovered_file_name)
+                << std::endl;
     }
   }
 
-  for (int i = tests_begin; i <= tests_end; ++i) {
-    dir = std::to_string(i) + "/";
-    const std::string in_file_changed_name = dir + "input_changed.txt";
-    const std::string out_recovered_file_name = dir + "recovered.bin";
+  std::cout
+      << std::endl
+      << "/*****************************signature, compressed delta, patching "
+         "tests********************************/"
+      << std::endl;
+  {
+    const int tests_begin = 0;
+    const int tests_end = 8;
+    std::string dir;
+    for (int i = tests_begin; i <= tests_end; ++i) {
+      dir = std::to_string(i) + "/";
 
-    std::cout << "test: " << i << " result: "
-              << are_files_identical(in_file_changed_name,
-                                     out_recovered_file_name)
-              << std::endl;
+      size_t block_size = 32;
+      Rollsum ws;
+      Mdfour ss;
+
+      const std::string in_file_name = dir + "input.txt";
+      const std::string in_sig_file_name = dir + "sig.bin";
+      {
+        Signature s(ws, ss, in_file_name, in_sig_file_name, block_size);
+        s.CreateSignature();
+      }
+
+      const std::string in_file_changed_name = dir + "input_changed.txt";
+      const std::string out_delta_file_name = dir + "delta.bin";
+      {
+        Delta d(ws, ss, in_file_changed_name, in_sig_file_name,
+                out_delta_file_name, block_size);
+        d.CreateCompressedDelta();
+      }
+
+      const std::string out_recovered_file_name = dir + "recovered.bin";
+      {
+        Patch p(in_file_name, out_delta_file_name, out_recovered_file_name,
+                block_size);
+        p.MakePatch();
+      }
+    }
+
+    for (int i = tests_begin; i <= tests_end; ++i) {
+      dir = std::to_string(i) + "/";
+      const std::string in_file_changed_name = dir + "input_changed.txt";
+      const std::string out_recovered_file_name = dir + "recovered.bin";
+
+      std::cout << "test: " << i << " result: "
+                << are_files_identical(in_file_changed_name,
+                                       out_recovered_file_name)
+                << std::endl;
+    }
   }
 
   return 1;
