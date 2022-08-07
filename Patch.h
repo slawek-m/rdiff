@@ -1,7 +1,7 @@
 #ifndef PATCH_H
 #define PATCH_H
 
-#include <fstream>
+#include "FileIO.h"
 #include <string>
 #include <vector>
 
@@ -18,8 +18,8 @@ private:
   const std::string m_in_delta_file_name;
   const std::string m_out_recovered_file_name;
   const uint32_t m_block_size;
-  std::ofstream m_fout_recovered;
-  std::ifstream m_fin;
+  FileOut m_fout_recovered;
+  FileIn m_fin;
 
   const char m_block_delimiter{'b'};
   const char m_compressed_delimiter{'c'};

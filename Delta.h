@@ -1,6 +1,7 @@
 #ifndef DELTA_H
 #define DELTA_H
 
+#include "FileIO.h"
 #include "Signature.h"
 #include <deque>
 
@@ -37,14 +38,14 @@ private:
   const char m_empty_delimiter{'e'};
 
   bool Match(uint32_t weak_sig, uint32_t &block_num);
-  void WriteFile(std::ofstream &fout, uint32_t block_num);
-  void WriteTail(std::ofstream &fout);
+  void WriteFile(FileOut &fout, uint32_t block_num);
+  void WriteTail(FileOut &fout);
   void WriteData(char data);
   bool IsIdentical();
   bool IsEmpty();
   void CreateEmpty();
 
-  void WriteCompressedFile(std::ofstream &fout,
+  void WriteCompressedFile(FileOut &fout,
                            const std::pair<uint32_t, uint32_t> &range);
   class CompressionSM {
   public:

@@ -1,5 +1,4 @@
 #include "Delta.h"
-#include <fstream>
 #include <iostream>
 
 //#define DEBUG_ENABLE 1
@@ -19,7 +18,7 @@ Delta::Delta(Weaksum &weak, Strongsum &strong, const std::string &in_file_name,
 void Delta::CreateDelta() {
 
   if (IsIdentical()) {
-    std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+    FileOut fout(m_out_delta_file_name, std::ofstream::binary);
     return;
   }
 
@@ -28,17 +27,17 @@ void Delta::CreateDelta() {
     return;
   }
 
-  std::ifstream fin(m_in_file_name, std::ifstream::binary);
-  std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+  FileIn fin(m_in_file_name, std::ifstream::binary);
+  FileOut fout(m_out_delta_file_name, std::ofstream::binary);
 
   char buff;
   char front;
   uint32_t weak_sig;
   uint32_t block_num;
 
-  while (!fin.eof()) {
-    fin.read(&buff, 1);
-    if (fin.gcount()) {
+  while (!fin.Eof()) {
+    fin.Read(&buff, 1);
+    if (fin.Count()) {
       m_dq.push_back(buff);
       auto size = m_dq.size();
       if (size == 1) {
@@ -165,7 +164,7 @@ bool Delta::Match(uint32_t weak_sig, uint32_t &block_num) {
 
 void Delta::CreateCompressedDelta() {
   if (IsIdentical()) {
-    std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+    FileOut fout(m_out_delta_file_name, std::ofstream::binary);
     return;
   }
 
@@ -174,8 +173,8 @@ void Delta::CreateCompressedDelta() {
     return;
   }
 
-  std::ifstream fin(m_in_file_name, std::ifstream::binary);
-  std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
+  FileIn fin(m_in_file_name, std::ifstream::binary);
+  FileOut fout(m_out_delta_file_name, std::ofstream::binary);
 
   char buff;
   char front;
@@ -183,9 +182,9 @@ void Delta::CreateCompressedDelta() {
   uint32_t block_num;
   std::pair<uint32_t, uint32_t> range;
 
-  while (!fin.eof()) {
-    fin.read(&buff, 1);
-    if (fin.gcount()) {
+  while (!fin.Eof()) {
+    fin.Read(&buff, 1);
+    if (fin.Count()) {
       m_dq.push_back(buff);
       auto size = m_dq.size();
       if (size == 1) {
@@ -289,75 +288,75 @@ void Delta::CreateCompressedDelta() {
 
 void Delta::WriteData(char data) { m_file_data_buffer.push_back(data); }
 
-void Delta::WriteFile(std::ofstream &fout, uint32_t block_num) {
+void Delta::WriteFile(FileOut &fout, uint32_t block_num) {
   const size_t out_data_size = m_file_data_buffer.size();
   if (out_data_size) {
-    fout.write(&m_data_delimiter, 1);
+    fout.Write(&m_data_delimiter, 1);
 
-    fout.write(reinterpret_cast<const char *>(&out_data_size),
+    fout.Write(reinterpret_cast<const char *>(&out_data_size),
                m_data_num_field_size);
-    fout.write(m_file_data_buffer.data(), out_data_size);
+    fout.Write(m_file_data_buffer.data(), out_data_size);
     m_file_data_buffer.clear();
   }
 
-  fout.write(&m_block_delimiter, 1);
-  fout.write(reinterpret_cast<char *>(&block_num), m_block_num_field_size);
+  fout.Write(&m_block_delimiter, 1);
+  fout.Write(reinterpret_cast<char *>(&block_num), m_block_num_field_size);
 }
 
-void Delta::WriteCompressedFile(std::ofstream &fout,
+void Delta::WriteCompressedFile(FileOut &fout,
                                 const std::pair<uint32_t, uint32_t> &range) {
   const size_t out_data_size = m_file_data_buffer.size();
   if (out_data_size) {
-    fout.write(&m_data_delimiter, 1);
+    fout.Write(&m_data_delimiter, 1);
 
-    fout.write(reinterpret_cast<const char *>(&out_data_size),
+    fout.Write(reinterpret_cast<const char *>(&out_data_size),
                m_data_num_field_size);
-    fout.write(m_file_data_buffer.data(), out_data_size);
+    fout.Write(m_file_data_buffer.data(), out_data_size);
     m_file_data_buffer.clear();
   }
 
   if (range.second > range.first) {
-    fout.write(&m_compressed_delimiter, 1);
-    fout.write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.first)),
+    fout.Write(&m_compressed_delimiter, 1);
+    fout.Write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.first)),
                m_block_num_field_size);
-    fout.write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.second)),
+    fout.Write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.second)),
                m_block_num_field_size);
   } else if (range.second == range.first) {
-    fout.write(&m_block_delimiter, 1);
-    fout.write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.first)),
+    fout.Write(&m_block_delimiter, 1);
+    fout.Write(reinterpret_cast<char *>(const_cast<uint32_t *>(&range.first)),
                m_block_num_field_size);
   } else {
     std::cerr << "range error" << std::endl;
   }
 }
 
-void Delta::WriteTail(std::ofstream &fout) {
+void Delta::WriteTail(FileOut &fout) {
   const size_t out_data_size = m_file_data_buffer.size();
   if (out_data_size) {
-    fout.write(&m_data_delimiter, 1);
+    fout.Write(&m_data_delimiter, 1);
 
-    fout.write(reinterpret_cast<const char *>(&out_data_size),
+    fout.Write(reinterpret_cast<const char *>(&out_data_size),
                m_data_num_field_size);
-    fout.write(m_file_data_buffer.data(), out_data_size);
+    fout.Write(m_file_data_buffer.data(), out_data_size);
     m_file_data_buffer.clear();
   }
 }
 
 bool Delta::IsIdentical() {
-  std::ifstream fin(m_in_file_name, std::ifstream::binary);
-  std::ifstream fsig(m_in_sig_file_name, std::ifstream::binary);
+  FileIn fin(m_in_file_name, std::ifstream::binary);
+  FileIn fsig(m_in_sig_file_name, std::ifstream::binary);
 
   std::vector<char> input_buffer(m_block_size);
   const size_t signature_size = m_ws.GetSize() + m_ss.GetSize();
   std::vector<char> computed_signature_buffer(signature_size);
   std::vector<char> read_signature_buffer(signature_size);
 
-  while (!fin.eof() && !fsig.eof()) {
-    fin.read(input_buffer.data(), input_buffer.size());
-    size_t actual_block_size = fin.gcount();
+  while (!fin.Eof() && !fsig.Eof()) {
+    fin.Read(input_buffer.data(), input_buffer.size());
+    size_t actual_block_size = fin.Count();
 
-    fsig.read(read_signature_buffer.data(), read_signature_buffer.size());
-    size_t actual_signature_size = fsig.gcount();
+    fsig.Read(read_signature_buffer.data(), read_signature_buffer.size());
+    size_t actual_signature_size = fsig.Count();
 
     if (((actual_block_size > 0) && (actual_signature_size == 0)) ||
         ((actual_block_size == 0) && (actual_signature_size > 0))) {
@@ -378,10 +377,10 @@ bool Delta::IsIdentical() {
 }
 
 bool Delta::IsEmpty() {
-  std::ifstream fin(m_in_file_name, std::ifstream::binary);
-  if (!fin.eof()) {
+  FileIn fin(m_in_file_name, std::ifstream::binary);
+  if (!fin.Eof()) {
     char val;
-    if (!fin.read(&val, 1)) {
+    if (!fin.Read(&val, 1)) {
       return true;
     }
   }
@@ -389,8 +388,8 @@ bool Delta::IsEmpty() {
 }
 
 void Delta::CreateEmpty() {
-  std::ofstream fout(m_out_delta_file_name, std::ofstream::binary);
-  fout.write(&m_empty_delimiter, 1);
+  FileOut fout(m_out_delta_file_name, std::ofstream::binary);
+  fout.Write(&m_empty_delimiter, 1);
 }
 
 bool Delta::CompressionSM::AddBlock(uint32_t block_number,
@@ -448,20 +447,20 @@ bool Delta::CompressionSM::Reset(std::pair<uint32_t, uint32_t> &range) {
 }
 
 void Delta::ParseDelta() {
-  std::ifstream fin(m_out_delta_file_name, std::ifstream::binary);
+  FileIn fin(m_out_delta_file_name, std::ifstream::binary);
   char delimiter;
   std::vector<char> data_buffer(m_block_size);
 
-  while (!fin.eof()) {
-    fin.read(&delimiter, 1);
-    if (fin.gcount()) {
+  while (!fin.Eof()) {
+    fin.Read(&delimiter, 1);
+    if (fin.Count()) {
       if (delimiter == m_block_delimiter) {
-        fin.read(data_buffer.data(), m_block_num_field_size);
+        fin.Read(data_buffer.data(), m_block_num_field_size);
         uint32_t block_number =
             *reinterpret_cast<uint32_t *>(data_buffer.data());
         printf("block_number: %d\n", block_number);
       } else if (delimiter == m_data_delimiter) {
-        fin.read(data_buffer.data(), m_data_num_field_size);
+        fin.Read(data_buffer.data(), m_data_num_field_size);
         uint32_t data_length =
             *reinterpret_cast<uint32_t *>(data_buffer.data());
         printf("data_length: %d\n", data_length);
@@ -469,12 +468,12 @@ void Delta::ParseDelta() {
         uint32_t buffs_number = data_length / m_block_size;
         uint32_t buff_tail_size = data_length % m_block_size;
         while (buffs_number--) {
-          fin.read(data_buffer.data(), m_block_size);
+          fin.Read(data_buffer.data(), m_block_size);
           for (const auto &a : data_buffer) {
             printf("val: %c, %x\n", a, a);
           }
         }
-        fin.read(data_buffer.data(), buff_tail_size);
+        fin.Read(data_buffer.data(), buff_tail_size);
         for (uint32_t i = 0; i < buff_tail_size; ++i) {
           printf("val: %c, %x\n", data_buffer.at(i), data_buffer.at(i));
         }
