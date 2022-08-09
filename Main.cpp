@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
       Mdfour ss;
 
       Delta d(ws, ss, argv[2], argv[3], argv[4], block_size);
-      d.CreateCompressedDelta();
+      d.CreateDelta(true);
     } else if (0 == strcmp(argv[1], "patch")) {
       if (argc < 5) {
         std::cerr << "too few arguments" << std::endl;

@@ -281,7 +281,7 @@ int main() {
       {
         Delta d(ws, ss, in_file_changed_name, in_sig_file_name,
                 out_delta_file_name, block_size);
-        d.CreateDelta();
+        d.CreateDelta(false);
       }
 
       const std::string out_recovered_file_name = dir + "recovered.bin";
@@ -332,7 +332,7 @@ int main() {
       {
         Delta d(ws, ss, in_file_changed_name, in_sig_file_name,
                 out_delta_file_name, block_size);
-        d.CreateCompressedDelta();
+        d.CreateDelta(true);
       }
 
       const std::string out_recovered_file_name = dir + "recovered.bin";
