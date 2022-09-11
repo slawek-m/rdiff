@@ -82,7 +82,7 @@ private:
     uint32_t m_first, m_last;
     uint32_t m_state{0};
   };
-  
+
   CompressionSM m_csm;
   FileOut &m_fout;
 };

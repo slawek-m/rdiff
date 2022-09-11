@@ -16,9 +16,22 @@ public:
   };
   std::streamsize Count() const { return m_f.gcount(); };
   bool Eof() const { return m_f.eof(); };
+  size_t Length() const {
+    m_f.seekg(0, m_f.end);
+    size_t length = m_f.tellg();
+    m_f.seekg(0, m_f.beg);
+    return length;
+  };
+  std::istream &Seekg(std::streampos pos) { return m_f.seekg(pos); };
+  std::istream &Seekg(std::streamoff off, std::ios_base::seekdir way) {
+    return m_f.seekg(off, way);
+  };
+  std::ios_base::seekdir Beg() { return m_f.beg; };
+  std::ios_base::seekdir Cur() { return m_f.cur; };
+  std::ios_base::seekdir End() { return m_f.end; };
 
 private:
-  std::ifstream m_f;
+  mutable std::ifstream m_f;
 };
 
 class FileOut {

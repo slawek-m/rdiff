@@ -16,15 +16,26 @@ size_t Patch::ReadBlockFromOryginal(std::vector<char> &data_buffer,
   size_t size = 0;
   FileIn fin(m_in_oryginal_file_name, std::ifstream::binary);
 
-  for (uint32_t cnt = 0; cnt <= block_number; ++cnt) {
-    size = 0;
-    for (size_t i = 0; (i < m_block_size) && (!fin.Eof()); ++i) {
-      fin.Read(data_buffer.data() + i, 1);
-      if (fin.Count()) {
-        ++size;
-      }
-    }
+  size_t file_length = fin.Length();
+  std::streamoff offset = block_number * m_block_size;
+  ;
+  size_t actual_block_size;
+
+  if (static_cast<size_t>(offset + m_block_size) <= file_length) {
+    actual_block_size = m_block_size;
+  } else {
+    actual_block_size = file_length - offset;
   }
+
+  size_t read_size = 0;
+  while (actual_block_size) {
+    fin.Seekg(offset, fin.Beg());
+    fin.Read(data_buffer.data() + size, actual_block_size);
+    read_size = fin.Count();
+    actual_block_size -= read_size;
+    size += read_size;
+  }
+
   return size;
 }
 
