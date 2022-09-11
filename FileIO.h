@@ -29,6 +29,7 @@ public:
   std::ios_base::seekdir Beg() { return m_f.beg; };
   std::ios_base::seekdir Cur() { return m_f.cur; };
   std::ios_base::seekdir End() { return m_f.end; };
+  std::filebuf* Rdbuf() const { return m_f.rdbuf(); };
 
 private:
   mutable std::ifstream m_f;
@@ -46,6 +47,9 @@ public:
     return m_f.write(s, n);
   };
   bool Eof() const { return m_f.eof(); };
+  std::ostream &operator<< (std::streambuf* sb ) {
+    return m_f << sb;
+  };
 
 private:
   std::ofstream m_f;

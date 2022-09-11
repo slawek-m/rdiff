@@ -54,18 +54,11 @@ size_t Patch::ReadBlocksFromOryginal(std::vector<char> &blocks_data_buffer,
 }
 
 bool Patch::CopyOryginal() {
-  char val;
   FileIn fin(m_in_delta_file_name, std::ifstream::binary);
 
   if (!fin.Length()) {
     FileIn fin_oryginal(m_in_oryginal_file_name, std::ifstream::binary);
-
-    while (!fin_oryginal.Eof()) {
-      fin_oryginal.Read(&val, 1);
-      if (fin_oryginal.Count()) {
-        m_fout_recovered.Write(&val, 1);
-      }
-    }
+    m_fout_recovered << fin_oryginal.Rdbuf();
     return true;
   }
   return false;
