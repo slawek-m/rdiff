@@ -38,7 +38,7 @@ private:
   bool Match(uint32_t weak_sig, uint32_t &block_num);
 
   bool IsIdentical();
-  bool IsEmpty();
+  bool IsInputEmpty();
   void CreateEmpty();
 };
 

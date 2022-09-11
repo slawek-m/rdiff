@@ -57,8 +57,7 @@ bool Patch::CopyOryginal() {
   char val;
   FileIn fin(m_in_delta_file_name, std::ifstream::binary);
 
-  fin.Read(&val, 1);
-  if (!fin.Count()) {
+  if (!fin.Length()) {
     FileIn fin_oryginal(m_in_oryginal_file_name, std::ifstream::binary);
 
     while (!fin_oryginal.Eof()) {

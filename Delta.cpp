@@ -23,7 +23,7 @@ void Delta::CreateDelta(bool is_compressed_mode) {
     return;
   }
 
-  if (IsEmpty()) {
+  if (IsInputEmpty()) {
     CreateEmpty();
     return;
   }
@@ -158,15 +158,11 @@ bool Delta::IsIdentical() {
   return true;
 }
 
-bool Delta::IsEmpty() {
+bool Delta::IsInputEmpty() {
   FileIn fin(m_in_file_name, std::ifstream::binary);
-  if (!fin.Eof()) {
-    char val;
-    if (!fin.Read(&val, 1)) {
-      return true;
-    }
-  }
-  return false;
+  bool ret;
+  fin.Length() ? ret = false : ret = true;
+  return ret;
 }
 
 void Delta::CreateEmpty() {
