@@ -1,6 +1,7 @@
 #ifndef DELTA_H
 #define DELTA_H
 
+#include "Config.h"
 #include "FileIO.h"
 #include "Signature.h"
 #include <deque>
@@ -26,14 +27,14 @@ private:
   std::deque<char> m_dq;
   std::vector<char> m_input_buffer;
 
-  const char m_block_delimiter{'b'};
-  const char m_compressed_delimiter{'c'};
-  const int m_block_num_field_size{4};
+  const char m_block_delimiter{BLOCK_DEL};
+  const char m_compressed_delimiter{COMPRESSED_DEL};
+  const int m_block_num_field_size{BLOCK_SIZE};
 
-  const char m_data_delimiter{'d'};
-  const int m_data_num_field_size{4};
+  const char m_data_delimiter{DATA_DEL};
+  const int m_data_num_field_size{DATA_SIZE};
 
-  const char m_empty_delimiter{'e'};
+  const char m_empty_delimiter{EMPTY_DEL};
 
   bool Match(uint32_t weak_sig, uint32_t &block_num);
 

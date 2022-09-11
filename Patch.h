@@ -1,6 +1,7 @@
 #ifndef PATCH_H
 #define PATCH_H
 
+#include "Config.h"
 #include "FileIO.h"
 #include <string>
 #include <vector>
@@ -21,14 +22,14 @@ private:
   FileOut m_fout_recovered;
   FileIn m_fin;
 
-  const char m_block_delimiter{'b'};
-  const char m_compressed_delimiter{'c'};
-  const int m_block_num_field_size{4};
+  const char m_block_delimiter{BLOCK_DEL};
+  const char m_compressed_delimiter{COMPRESSED_DEL};
+  const int m_block_num_field_size{BLOCK_SIZE};
 
-  const char m_data_delimiter{'d'};
-  const int m_data_num_field_size{4};
+  const char m_data_delimiter{DATA_DEL};
+  const int m_data_num_field_size{DATA_SIZE};
 
-  const char m_empty_delimiter{'e'};
+  const char m_empty_delimiter{EMPTY_DEL};
 
   size_t ReadBlockFromOryginal(std::vector<char> &data_buffer,
                                uint32_t block_number);

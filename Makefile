@@ -6,10 +6,10 @@ rdiff: Main.o BlockSignature.o Signature.o Delta.o Patch.o WriterDelta.o
 tests: Tests.o BlockSignature.o Signature.o Delta.o Patch.o WriterDelta.o
 	g++ -lm Tests.o BlockSignature.o Signature.o Delta.o Patch.o WriterDelta.o -o tests
 
-Main.o: Main.cpp Mdfour.h Rabinkarp.h Rollsum.h Weaksum.h Strongsum.h BlockSignature.h Signature.h Delta.h Patch.h FileIO.h WriterDelta.h
+Main.o: Main.cpp Mdfour.h Rabinkarp.h Rollsum.h Weaksum.h Strongsum.h BlockSignature.h Signature.h Delta.h Patch.h FileIO.h WriterDelta.h Config.h
 	g++ -Wall -c Main.cpp -o Main.o
 
-Tests.o: Tests.cpp Mdfour.h Rabinkarp.h Rollsum.h Weaksum.h Strongsum.h BlockSignature.h Signature.h Delta.h Patch.h FileIO.h WriterDelta.h
+Tests.o: Tests.cpp Mdfour.h Rabinkarp.h Rollsum.h Weaksum.h Strongsum.h BlockSignature.h Signature.h Delta.h Patch.h FileIO.h WriterDelta.h Config.h
 	g++ -Wall -c Tests.cpp -o Tests.o
 
 BlockSignature.o: BlockSignature.cpp BlockSignature.h

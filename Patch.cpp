@@ -19,7 +19,7 @@ size_t Patch::ReadBlockFromOryginal(std::vector<char> &data_buffer,
   size_t file_length = fin.Length();
   std::streamoff offset = block_number * m_block_size;
   fin.Seekg(offset, fin.Beg());
-  
+
   size_t actual_block_size;
   if (static_cast<size_t>(offset + m_block_size) <= file_length) {
     actual_block_size = m_block_size;
