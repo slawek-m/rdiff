@@ -5,35 +5,29 @@
 #include "Rabinkarp.h"
 #include "Rollsum.h"
 #include "Signature.h"
+#include <algorithm>
 #include <array>
 #include <fstream>
 #include <iostream>
 
 bool are_files_identical(const std::string &file_name_1,
                          const std::string &file_name_2) {
-  std::ifstream fin_1(file_name_1, std::ifstream::binary);
-  std::ifstream fin_2(file_name_2, std::ifstream::binary);
+  std::ifstream fin_1(file_name_1, std::ifstream::binary | std::ifstream::ate);
+  std::ifstream fin_2(file_name_2, std::ifstream::binary | std::ifstream::ate);
 
-  char data_1, data_2;
-
-  while (!fin_1.eof() && !fin_2.eof()) {
-    fin_1.read(&data_1, 1);
-    auto cnt_1 = fin_1.gcount();
-
-    fin_2.read(&data_2, 1);
-    auto cnt_2 = fin_2.gcount();
-
-    // printf("data: %x, %x, cnt: %d, %d\n", data_1, data_2, cnt_1, cnt_2);
-
-    if (cnt_1 != cnt_2) {
-      return false;
-    } else if ((cnt_1 == 1) && (cnt_2 == 1)) {
-      if (data_1 != data_2) {
-        return false;
-      }
-    }
+  if (fin_1.fail() || fin_2.fail()) {
+    return false;
   }
-  return true;
+
+  if (fin_1.tellg() != fin_2.tellg()) {
+    return false;
+  }
+
+  fin_1.seekg(0, std::ifstream::beg);
+  fin_2.seekg(0, std::ifstream::beg);
+  return std::equal(std::istreambuf_iterator<char>(fin_1.rdbuf()),
+                    std::istreambuf_iterator<char>(),
+                    std::istreambuf_iterator<char>(fin_2.rdbuf()));
 }
 
 int main() {
